@@ -12,7 +12,7 @@ page = PageModel([
 def get_words_and_styles(img_path):
     page.read_from_file(img_path)
     page.extract()
-    return page.to_dict(is_vec=True)
+    return page.page_units[-1].sub_modelto_dict(is_vec=True)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='create dataset for PageR from PubLayNet')

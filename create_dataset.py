@@ -6,7 +6,7 @@ import argparse
 
 page = PageModel([
     PageModelUnit(id="image", sub_model=ImageModel(), converters={}, extractors=[]),
-    PageModelUnit(id="word_and_style", sub_model=WordsAndStylesModel(), converters={"image": ImageToWordsAndStyles()}, extractors=[]),
+    PageModelUnit(id="word_and_style", sub_model=WordsAndStylesModel(), converters={"image": ImageToWordsAndStyles(conf={"lang": "eng+rus", "psm": 4, "oem": 3, "k": 4})}, extractors=[]),
 ])
 
 def get_words_and_styles(img_path):

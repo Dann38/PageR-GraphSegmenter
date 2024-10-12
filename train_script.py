@@ -5,33 +5,30 @@ import json
 import numpy as np
 import argparse
 
-
 def list_batchs(dataset, batch_size):
     for i in range(0, len(dataset), batch_size):
         yield dataset[i:i+batch_size]
 
-def train_one_step(model, batch, opt):
+def train_one_step(model, batch, opt, loss_list):
     my_loss_list = []
     count_matrix_var = len(model.trainable_variables)
     dw_array = [[] for _ in range(count_matrix_var)]
     for i, graph in enumerate(batch):
-        try:
-            A, H0, s1, s2, true_edges = get_Mtrxs(graph)
-            with tf.GradientTape() as tape:
-                H_end = model(A, H0, s1, s2)
-                loss = my_loss(H_end, true_edges)
-                my_loss_list.append(loss)
-                print(f"{(i+1)/len(batch)*100:.2f} % loss = {loss.numpy():.5f} {' '*30}",  end="\r")
-            dW = tape.gradient(loss, model.trainable_variables)
-            for i, dw in enumerate(dW):
-                dw_array[i].append(dw)
-        except:
-            pass
+        A, H0, s1, s2, true_edges = get_Mtrxs(graph)
+        with tf.GradientTape() as tape:
+            H_end = model(A, H0, s1, s2)
+            loss = my_loss(H_end, true_edges)
+            my_loss_list.append(loss.numpy())
+            print(f"{(i+1)/len(batch)*100:.2f} % loss = {loss.numpy():.5f} {' '*30}", end='\r')
+        dW = tape.gradient(loss, model.trainable_variables)
+        for i, dw in enumerate(dW):
+            dw_array[i].append(dw)
     dW = []
     for idw_array in dw_array:
         dW.append(tf.reduce_mean(idw_array, axis=0))
     opt.apply_gradients(zip(dW, model.trainable_variables))
-    return np.mean(my_loss_list)
+    loss_list.append(np.mean(my_loss_list))
+    
 
 
 def train_model(params, model, dataset, path_save, save_frequency=5):  
@@ -40,9 +37,8 @@ def train_model(params, model, dataset, path_save, save_frequency=5):
         my_loss_list = []
         print("="*10, f"EPOCH #{i+1}","="*10)
         for j, batch in enumerate(list_batchs(dataset, params["batch_size"])):
-            loss_ = train_one_step(model, batch, opt)
-            my_loss_list.append(loss_)
-            print(f"Batch # {j} \t {loss_:.4f}", " "*40)
+            train_one_step(model, batch, opt, my_loss_list)
+            print(f"\nBatch # {j+1} loss={my_loss_list[-1]:.4f}" + " "*40)
         with open('log.txt', 'a') as f:
             f.write(f"EPOCH #{i}\t {np.mean(my_loss_list)}\n")  
         if i % save_frequency == 0:

@@ -3,8 +3,7 @@ import tensorflow as tf
 
 
 def get_need_model(graph):
-    M =max(graph["A"][0])+1
-    N =max(graph["A"][1])+1
+    N = max(max(graph["A"][0])+1, max(graph["A"][1])+1)
     indices_A = np.transpose(graph["A"])
     
     v = np.array(graph['nodes_feature'], dtype=np.float32)
@@ -17,18 +16,18 @@ def get_need_model(graph):
     A = tf.SparseTensor(indices=indices_A,
                     values=np.array([v + 0 if index[0] != index[1] else 1
                                      for v, index in zip(graph["edges_feature"], np.transpose(graph["A"]))], dtype=np.float32), 
-                    dense_shape=[M, N])
+                    dense_shape=[N, N])
     d = tf.sparse.reduce_sum(A, axis=1)
     Mtrx = tf.SparseTensor(indices=indices_A,
                     values=np.array([val/d[index[0]] for index, val in zip(A.indices, A.values)], dtype=np.float32), 
-                    dense_shape=[M, N])
+                    dense_shape=[N, N])
     
     s1 = tf.SparseTensor(indices=[[i, e0] for i, e0 in enumerate(graph["A"][0])],
                     values=np.ones_like(graph["A"][0], dtype=np.float32), 
-                    dense_shape=[len(graph["A"][0]), max(graph["A"][0])+1])
+                    dense_shape=[len(graph["A"][0]), N])
     s2 = tf.SparseTensor(indices=[[i, e1] for i, e1 in enumerate(graph["A"][1])],
-                    values=np.ones_like(graph["A"][0], dtype=np.float32), 
-                    dense_shape=[len(graph["A"][0]), max(graph["A"][0])+1])
+                    values=np.ones_like(graph["A"][1], dtype=np.float32), 
+                    dense_shape=[len(graph["A"][1]), N])
     return Mtrx, H0, s1, s2
     
 

@@ -1,11 +1,11 @@
 import tensorflow as tf
 
 params = {
-    "start_w": 0.1,
-    "start_b": 1.0,
+    "start_w": 0.01,
+    "start_b": 0.1,
     "count_neuron_layer_1": 9,
-    "count_neuron_layer_2": 12,
-    "count_neuron_layer_end": 3,
+    "count_neuron_layer_2": 27,
+    "count_neuron_layer_end": 18,
 }
 
 def get_model(path=None):
@@ -28,7 +28,9 @@ class MyEndLayer(tf.Module):
     def __call__(self, s1, s2, h): 
         left_ = tf.sparse.sparse_dense_matmul(s1, h)
         right_ = tf.sparse.sparse_dense_matmul(s2, h)
-        return 0.5*(1-tf.losses.cosine_similarity(left_ , right_)) 
+        # return tf.reduce_sum(left_norm * right_norm, axis=1)
+        return 0.5*(1.0-tf.losses.cosine_similarity(left_ , right_)) 
+        
         
 
 class MyGraphConv(tf.Module):

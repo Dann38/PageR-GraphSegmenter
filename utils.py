@@ -3,14 +3,16 @@ import tensorflow as tf
 
 
 def get_need_model(graph):
-    N = max(max(graph["A"][0])+1, max(graph["A"][1])+1)
+    N = len(graph['nodes_feature'])#max(max(graph["A"][0])+1, max(graph["A"][1])+1)
     indices_A = np.transpose(graph["A"])
     
     v = np.array(graph['nodes_feature'], dtype=np.float32)
     max_ = np.max(v, axis=0)
     min_ = np.min(v, axis=0)
     delta_ = max_- min_
-    for i in range(len(v[0])):
+    
+    # for i in range(len(v[0])):
+    for i in range(2):
         v[:, i] = (max_[i] - v[:, i])/delta_[i] if delta_[i] != 0 else v[:, i]
     H0 = tf.constant(v[:, :])
     A = tf.SparseTensor(indices=indices_A,

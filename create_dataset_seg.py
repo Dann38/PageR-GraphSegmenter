@@ -47,8 +47,11 @@ if __name__ == "__main__":
     files = os.listdir(args.path_dir_jsons)
     N = len(files)
     for i, json_file in enumerate(files):
-        graph = get_graph_from_file(os.path.join(args.path_dir_jsons, json_file))
-        dataset["dataset"].append(graph)
+        try:
+            graph = get_graph_from_file(os.path.join(args.path_dir_jsons, json_file))
+            dataset["dataset"].append(graph)
+        except:
+            print("error in ", json_file)
         print(f"{(i+1)/N*100:.2f} %"+20*" ", end='\r')     
         
     with open(args.path_rez_json, "w") as f:

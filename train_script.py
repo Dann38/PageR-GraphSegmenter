@@ -18,9 +18,10 @@ def train_one_step(model, batch, opt, loss_list):
         with tf.GradientTape() as tape:
             H_end = model(A, H0, s1, s2)
             loss = my_loss(H_end, true_edges)
-            my_loss_list.append(loss.numpy())
-            print(f"{(i+1)/len(batch)*100:.2f} % loss = {loss.numpy():.5f} {' '*30}", end='\r')
         dW = tape.gradient(loss, model.trainable_variables)
+        my_loss_list.append(loss[0].numpy())
+        print(f"{(i+1)/len(batch)*100:.2f} % loss = {loss[0].numpy():.5f} {' '*30}", end='\r')
+ 
         for i, dw in enumerate(dW):
             dw_array[i].append(dw)
     dW = []

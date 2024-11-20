@@ -35,7 +35,7 @@ def get_need_model(graph):
 
 def get_Mtrxs(graph):
     Mtrx, H0, s1, s2 = get_need_model(graph)
-    true_edges = tf.constant(graph["true_edges"], dtype=tf.float32)
+    true_edges = tf.transpose(tf.constant([graph["true_edges"]], dtype=tf.float32))
     return Mtrx, H0, s1, s2, true_edges
 
 

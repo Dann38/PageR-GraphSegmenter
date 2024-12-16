@@ -9,6 +9,25 @@ def list_batchs(dataset, batch_size):
     for i in range(0, len(dataset), batch_size):
         yield dataset[i:i+batch_size]
 
+def split_train_val(dataset, val_split=0.2, shuffle=True, seed=1234):
+    if shuffle:
+        rng = np.random.default_rng(seed)
+        rng.shuffle(dataset)
+    train_size = int(len(dataset) * (1 - val_split))
+    train_dataset = dataset[:train_size]
+    val_dataset = dataset[train_size:]
+    return train_dataset, val_dataset
+
+def validation(model, dataset):
+    my_loss_list = []
+    for i, graph in enumerate(dataset):
+        A, H0, s1, s2, true_edges = get_Mtrxs(graph)
+        H_end = model(A, H0, s1, s2)
+        loss = my_loss(H_end, true_edges)
+        my_loss_list.append(loss[0].numpy())
+        print(f"{(i+1)/len(dataset)*100:.2f} % loss = {loss[0].numpy():.5f} {' '*30}", end='\r')
+    return np.mean(my_loss_list)
+
 def train_one_step(model, batch, opt, loss_list):
     my_loss_list = []
     count_matrix_var = len(model.trainable_variables)
@@ -29,19 +48,20 @@ def train_one_step(model, batch, opt, loss_list):
         dW.append(tf.reduce_mean(idw_array, axis=0))
     opt.apply_gradients(zip(dW, model.trainable_variables))
     loss_list.append(np.mean(my_loss_list))
-    
-
 
 def train_model(params, model, dataset, path_save, save_frequency=5):  
     opt = tf.optimizers.SGD(learning_rate=params["learning_rate"])
+    train_dataset, val_dataset = split_train_val(dataset)
     for i in range(params["epochs"]):
         my_loss_list = []
         print("="*10, f"EPOCH #{i+1}","="*10)
-        for j, batch in enumerate(list_batchs(dataset, params["batch_size"])):
+        for j, batch in enumerate(list_batchs(train_dataset, params["batch_size"])):
             train_one_step(model, batch, opt, my_loss_list)
             print(f"\nBatch # {j+1} loss={my_loss_list[-1]:.4f}" + " "*40)
+        train_val = np.mean(my_loss_list)
+        validation_val = validation(model, val_dataset)
         with open('log.txt', 'a') as f:
-            f.write(f"EPOCH #{i}\t {np.mean(my_loss_list)}\n")  
+            f.write(f"EPOCH #{i}\t {train_val:.4f} (VAL: {validation_val:.4f})\n")  
         if i % save_frequency == 0:
             model.save(path_save+f"_{i//save_frequency}")
     model.save(path_save)

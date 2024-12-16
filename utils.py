@@ -1,6 +1,11 @@
 import numpy as np
 import tensorflow as tf
 
+def value_matrix(v, index):
+    if index[0] == index[1] or v == 0:
+        return 0.0
+    else: 
+        return 1.0/v 
 
 def get_need_model(graph):
     N = len(graph['nodes_feature'])#max(max(graph["A"][0])+1, max(graph["A"][1])+1)
@@ -16,10 +21,9 @@ def get_need_model(graph):
         v[:, i] = (max_[i] - v[:, i])/delta_[i] if delta_[i] != 0 else v[:, i]
     H0 = tf.constant(v[:, :])
     A = tf.SparseTensor(indices=indices_A,
-                    values=np.array([v + 0 if index[0] != index[1] else 1
-                                     for v, index in zip(graph["edges_feature"], np.transpose(graph["A"]))], dtype=np.float32), 
+                    values=np.array([value_matrix(v, index) for v, index in zip(graph["edges_feature"], np.transpose(graph["A"]))], dtype=np.float32), 
                     dense_shape=[N, N])
-    d = tf.sparse.reduce_sum(A, axis=1)
+    d = tf.sparse.reduce_sum(A, axis=1) + 1.0
     Mtrx = tf.SparseTensor(indices=indices_A,
                     values=np.array([val/d[index[0]] for index, val in zip(A.indices, A.values)], dtype=np.float32), 
                     dense_shape=[N, N])

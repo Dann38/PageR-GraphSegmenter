@@ -25,12 +25,16 @@ def get_model(path=None):
 
 
 class MyEndLayer(tf.Module):
+    def __init__(self, input_size, activation_fun):
+        self.W = tf.Variable(tf.random.normal(mean=params["start_w"], stddev=1.0, shape=[2*input_size, 1]))
+        self.activation = activation_fun
+
     def __call__(self, s1, s2, h): 
         left_ = tf.sparse.sparse_dense_matmul(s1, h)
         right_ = tf.sparse.sparse_dense_matmul(s2, h)
-        # return tf.reduce_sum(left_norm * right_norm, axis=1)
-        return 0.5*(1.0-tf.losses.cosine_similarity(left_ , right_)) 
-        
+        # return 0.5*(1.0-tf.losses.cosine_similarity(left_ , right_)) 
+        edges_vec = tf.concat([left_, right_], 1)
+        return self.activation(tf.matmul(edges_vec, self.W))        
         
 
 class MyGraphConv(tf.Module):
@@ -49,7 +53,7 @@ class GraphSegmenter(tf.Module):
     def __init__(self, l1, l2, l3):
         self.conv1 = MyGraphConv(l1, l2, tf.nn.relu)
         self.conv2 = MyGraphConv(l2, l3, tf.nn.relu)
-        self.end_layer = MyEndLayer()
+        self.end_layer = MyEndLayer(l3, tf.nn.sigmoid)
 
     @tf.function
     def __call__(self, A, H0, s1, s2):
@@ -68,4 +72,4 @@ def fun_loss(y_true, y_pred):
 
 @tf.function    
 def my_loss(edges_pred, true_edges):
-    return fun_loss(true_edges, edges_pred)
+    return fun_loss(tf.transpose(true_edges), tf.transpose(edges_pred))

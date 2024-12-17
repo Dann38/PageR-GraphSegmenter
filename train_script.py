@@ -1,5 +1,5 @@
 from utils import get_Mtrxs, classification_edges
-from model import get_model, my_loss
+from model import get_model, my_loss, params as model_params 
 import tensorflow as tf
 import json
 import numpy as np
@@ -51,7 +51,7 @@ def train_one_step(model, batch, opt, loss_list):
 
 def train_model(params, model, dataset, path_save, save_frequency=5):  
     opt = tf.optimizers.SGD(learning_rate=params["learning_rate"])
-    train_dataset, val_dataset = split_train_val(dataset)
+    train_dataset, val_dataset = split_train_val(dataset, val_split=0.1)
     for i in range(params["epochs"]):
         my_loss_list = []
         print("="*10, f"EPOCH #{i+1}","="*10)
@@ -83,7 +83,13 @@ if __name__ == "__main__":
     }
     with open(args.path_dataset, "r") as f:
         dataset = json.load(f)['dataset']
-
+    with open('log.txt', 'a') as f:
+        for i, p in params.items():
+            f.write(f'{i}:\t{p}\n')
+        for i, p in model_params.items():
+            f.write(f'{i}:\t{p}\n')
+        f.write(f'count_graphs:\t{len(dataset)}\n')
+        f.write(f"{'='*10}LEANING{'='*10}\n")
     print("DATASET INFO:")
     print("count row:", len(dataset))
     print("first:", dataset[0].keys())

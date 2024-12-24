@@ -1,13 +1,21 @@
 import json
-from pager import PageModel, PageModelUnit, WordsAndStylesModel, SpGraph4NModel, WordsAndStylesToSpGraph4N
+from pager import PageModel, PageModelUnit, WordsAndStylesModel, SpGraph4NModel, WordsAndStylesToSpGraph4N, WordsAndStylesToSpDelaunayGraph
 from pager.page_model.sub_models.dtype import Style, StyleWord, ImageSegment
 import os
 import argparse
 
-page_model = PageModel([
+def get_page_model(type_graph):
+    if type_graph == "4N":
+        return  PageModel([
     PageModelUnit("words_and_styles", sub_model=WordsAndStylesModel(), extractors=[], converters={}),
     PageModelUnit("graph", sub_model=SpGraph4NModel(), extractors=[],  converters={"words_and_styles": WordsAndStylesToSpGraph4N()}),
 ])
+    if type_graph == "Delaunay":
+        return  PageModel([
+    PageModelUnit("words_and_styles", sub_model=WordsAndStylesModel(), extractors=[], converters={}),
+    PageModelUnit("graph", sub_model=SpGraph4NModel(), extractors=[],  converters={"words_and_styles": WordsAndStylesToSpDelaunayGraph()}),
+])
+
 
 def is_one_block(word1, word2, blocks):
     for block in blocks:
@@ -15,7 +23,7 @@ def is_one_block(word1, word2, blocks):
             return 1
     return 0
 
-def get_graph_from_file(file_name):
+def get_graph_from_file(file_name, page_model):
     with open(file_name, "r") as f:
         info_img = json.load(f)
     publaynet_rez = info_img["blocks"]
@@ -37,10 +45,12 @@ if __name__ == "__main__":
                         help='path json dataset')
     parser.add_argument('--path_rez_json', type=str, nargs='?', required=True,
                         help='path rez json file')
-    
+    parser.add_argument('--type_graph', type=str, nargs='?', required=True, help='type graph (4N, Delaunay)')
+
     args = parser.parse_args()
     args.path_dir_jsons, 
     args.path_rez_json
+    page_model = get_page_model(type_graph=args.type_graph)
     dataset = {
         "dataset" : []
     }
@@ -48,7 +58,7 @@ if __name__ == "__main__":
     N = len(files)
     for i, json_file in enumerate(files):
         try:
-            graph = get_graph_from_file(os.path.join(args.path_dir_jsons, json_file))
+            graph = get_graph_from_file(os.path.join(args.path_dir_jsons, json_file), page_model)
             dataset["dataset"].append(graph)
         except:
             print("error in ", json_file)

@@ -4,7 +4,7 @@ import tensorflow as tf
 import json
 import numpy as np
 import argparse
-
+CUDA_VISIBLE_DEVICES=""
 def list_batchs(dataset, batch_size):
     for i in range(0, len(dataset), batch_size):
         yield dataset[i:i+batch_size]
@@ -38,6 +38,7 @@ def train_one_step(model, batch, opt, loss_list):
             H_end = model(A, H0, s1, s2)
             loss = my_loss(H_end, true_edges)
         dW = tape.gradient(loss, model.trainable_variables)
+        del tape
         my_loss_list.append(loss[0].numpy())
         print(f"{(i+1)/len(batch)*100:.2f} % loss = {loss[0].numpy():.5f} {' '*30}", end='\r')
  
@@ -50,7 +51,7 @@ def train_one_step(model, batch, opt, loss_list):
     loss_list.append(np.mean(my_loss_list))
 
 def train_model(params, model, dataset, path_save, save_frequency=5):  
-    opt = tf.optimizers.SGD(learning_rate=params["learning_rate"])
+    opt = tf.optimizers.legacy.Adam(learning_rate=params["learning_rate"])
     train_dataset, val_dataset = split_train_val(dataset, val_split=0.1)
     for i in range(params["epochs"]):
         my_loss_list = []

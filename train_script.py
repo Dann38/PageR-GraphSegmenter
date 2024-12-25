@@ -103,5 +103,7 @@ if __name__ == "__main__":
     print(f"\t nodes_feature:", np.shape(dataset[-1]["nodes_feature"]))
     print(f"\t edges_feature:", np.shape(dataset[-1]["edges_feature"]))
     print(f"\t true_edges:", np.shape(dataset[-1]["true_edges"]))
-    model = get_model()
+    model = get_model(args.name_model)
     train_model(params, model, dataset, args.name_model, args.fsave)
+
+

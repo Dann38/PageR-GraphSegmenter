@@ -21,6 +21,7 @@ def get_model(path=None):
     model.conv1.B = load_model.conv1.B
     model.conv2.W = load_model.conv2.W
     model.conv2.B = load_model.conv2.B
+    model.end_layer.W = load_model.end_layer.W
     return model
 
 

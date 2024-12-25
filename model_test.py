@@ -1,9 +1,11 @@
+CUDA_VISIBLE_DEVICES=""
 import os
 import argparse
 import numpy as np
 from pager import (PageModel, PageModelUnit,
                    ImageModel, ImageToWordsAndStyles,
-                   WordsAndStylesModel, PhisicalModel, 
+                   WordsAndStylesModel, PhisicalModel,
+                   WordsAndStylesToSpDelaunayGraph, 
                    WordsAndStylesToGNNBlocks)
 from pager.page_model.sub_models.dtype import ImageSegment
 from pager.metrics.uoi import segmenter_UoI as UoI, AP_and_AR_from_TP_FP_FN as AP_and_AR, TP_FP_FN_UoI
@@ -11,9 +13,15 @@ from pager.metrics.uoi import segmenter_UoI as UoI, AP_and_AR_from_TP_FP_FN as A
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='test dataset')
     parser.add_argument('--path_test_dataset', type=str, nargs='?', required=True)
-    # parser.add_argument('--name_model', type=str, nargs='?', required=True)
+    parser.add_argument('--name_model', type=str, nargs='?', required=True)
+    parser.add_argument('--graph_type', type=str, nargs='?', required=True)
     args = parser.parse_args()
-
+    set_converter = {
+        "path_seg_model": args.name_model,
+    }
+    if args.graph_type == "delaunay":
+        set_converter["graph_converter"] =  WordsAndStylesToSpDelaunayGraph() 
+    print(set_converter)
     phis_model = PageModel([
         PageModelUnit(id="phis", 
                       sub_model=PhisicalModel(), 
@@ -31,7 +39,7 @@ if __name__ == "__main__":
         PageModelUnit(id="phisical_model", 
                       sub_model=PhisicalModel(), 
                       extractors=[], 
-                      converters={"words_and_styles_model": WordsAndStylesToGNNBlocks()})
+                      converters={"words_and_styles_model": WordsAndStylesToGNNBlocks(set_converter)})
         ]) 
 
     path = args.path_test_dataset

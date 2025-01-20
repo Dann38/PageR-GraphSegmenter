@@ -166,3 +166,5 @@ old_*
 log.txt
 my_model_*
 log*
+*_edge_linear_*
+*_node_gnn_*

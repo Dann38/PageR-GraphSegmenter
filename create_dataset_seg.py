@@ -4,16 +4,17 @@ from pager.page_model.sub_models.dtype import Style, StyleWord, ImageSegment
 import os
 import argparse
 
-def get_page_model(type_graph):
+def get_page_model(type_graph, with_text=True):
+    conf = {"with_text": True} if with_text else None
     if type_graph == "4N":
         return  PageModel([
     PageModelUnit("words_and_styles", sub_model=WordsAndStylesModel(), extractors=[], converters={}),
-    PageModelUnit("graph", sub_model=SpGraph4NModel(), extractors=[],  converters={"words_and_styles": WordsAndStylesToSpGraph4N()}),
+    PageModelUnit("graph", sub_model=SpGraph4NModel(), extractors=[],  converters={"words_and_styles": WordsAndStylesToSpGraph4N(conf) }),
 ])
     if type_graph == "Delaunay":
         return  PageModel([
     PageModelUnit("words_and_styles", sub_model=WordsAndStylesModel(), extractors=[], converters={}),
-    PageModelUnit("graph", sub_model=SpGraph4NModel(), extractors=[],  converters={"words_and_styles": WordsAndStylesToSpDelaunayGraph()}),
+    PageModelUnit("graph", sub_model=SpGraph4NModel(), extractors=[],  converters={"words_and_styles": WordsAndStylesToSpDelaunayGraph(conf)}),
 ])
 
 
@@ -46,7 +47,7 @@ if __name__ == "__main__":
     parser.add_argument('--path_rez_json', type=str, nargs='?', required=True,
                         help='path rez json file')
     parser.add_argument('--type_graph', type=str, nargs='?', required=True, help='type graph (4N, Delaunay)')
-
+    
     args = parser.parse_args()
     args.path_dir_jsons, 
     args.path_rez_json

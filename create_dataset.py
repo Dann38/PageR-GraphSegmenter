@@ -1,13 +1,10 @@
 from pager import PageModel, PageModelUnit
 from pager.page_model.sub_models import ImageModel, WordsAndStylesModel, SpGraph4NModel
-from pager.page_model.sub_models import ImageToWordsAndStyles,  WordsAndStylesToSpGraph4N
+from pager.page_model.sub_models import ImageToWordsAndCNNStyles,  WordsAndStylesToSpGraph4N
 from publaynet_reader import PubLayNetDataset 
 import argparse
+import os
 
-page = PageModel([
-    PageModelUnit(id="image", sub_model=ImageModel(), converters={}, extractors=[]),
-    PageModelUnit(id="word_and_style", sub_model=WordsAndStylesModel(), converters={"image": ImageToWordsAndStyles(conf={"lang": "eng+rus", "psm": 4, "oem": 3, "k": 4})}, extractors=[]),
-])
 
 def get_words_and_styles(img_path):
     page.read_from_file(img_path)
@@ -23,9 +20,13 @@ if __name__ == "__main__":
     parser.add_argument('--start', type=int, nargs='?', required=True,
                         help='category exist') 
     parser.add_argument('--finish', type=int, nargs='?', required=True,
-                        help='category will exist')
-                        
+                        help='category will exist')               
     args = parser.parse_args()
+    PATH_STYLE_MODEL = os.environ["PATH_STYLE_MODEL"]
+    page = PageModel([
+    PageModelUnit(id="image", sub_model=ImageModel(), converters={}, extractors=[]),
+    PageModelUnit(id="word_and_style", sub_model=WordsAndStylesModel(), converters={"image": ImageToWordsAndCNNStyles(conf={"path_model": PATH_STYLE_MODEL,"lang": "eng+rus", "psm": 4, "oem": 3, "k": 4 })}, extractors=[]),
+])
     pln_ds = PubLayNetDataset(args.path_publaynet, args.path_words_and_styles)
     pln_ds.create_tmp_annotation_jsons(path_tmp_dataset=args.path_words_and_styles, 
                                        fun_additional_info=get_words_and_styles, 
